@@ -1,23 +1,22 @@
-package Bestbuy;
-import org.openqa.selenium.By;
+package bestbuy;
+
+import bestbuy.pages.HomePage;
+import bestbuy.pages.ProductPage;
+import bestbuy.pages.SearchResultPage;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import java.time.Duration;
-import java.util.List;
-
 public class BestBuyAutomationTest {
 
     WebDriver driver;
-    WebDriverWait wait;
+    HomePage homePage;
+    SearchResultPage searchResultPage;
+    ProductPage productPage;
 
     @BeforeClass
     public void setUp() {
@@ -26,15 +25,17 @@ public class BestBuyAutomationTest {
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--headless");  // For headless mode
         driver = new ChromeDriver(options);
-        wait = new WebDriverWait(driver, Duration.ofSeconds(10));
         driver.manage().window().maximize();
+
+        homePage = new HomePage(driver);
+        searchResultPage = new SearchResultPage(driver);
+        productPage = new ProductPage(driver);
     }
 
     @Test(priority = 1)
     public void openBestBuyWebsite() {
-        // Task 1: Open Web Browser and Navigate to Best Buy Website
-        driver.get("https://www.bestbuy.com/");
-        Assert.assertEquals(driver.getTitle(), "Best Buy | Official Online Store | Shop Now & Save");
+        homePage.open("https://www.bestbuy.com/");
+        Assert.assertEquals(homePage.getPageTitle(), "Best Buy | Official Online Store | Shop Now & Save");
     }
 
     @Test(priority = 2)
@@ -58,23 +59,18 @@ public class BestBuyAutomationTest {
 
     @Test(priority = 5)
     public void validateBottomLinks() {
-        // Task 5: Validate the Bottom Links on the Homepage
-        List<WebElement> bottomLinks = driver.findElements(By.cssSelector("footer a"));
-        for (WebElement link : bottomLinks) {
+        homePage.getBottomLinks().forEach(link -> {
             String url = link.getAttribute("href");
             int statusCode = getHttpResponseStatusCode(url);
             Assert.assertEquals(statusCode, 200);
-        }
+        });
     }
 
     @Test(priority = 6)
     public void searchAndAddItemToCart() {
-        // Task 6: Search for and Add an Item to the Shopping Cart
-        driver.findElement(By.id("gh-search-input")).sendKeys("laptop");
-        driver.findElement(By.cssSelector(".header-search-button")).click();
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".sku-title")));
-        driver.findElement(By.cssSelector(".sku-title a")).click();
-        driver.findElement(By.cssSelector(".add-to-cart-button")).click();
+        homePage.searchForItem("laptop");
+        searchResultPage.clickFirstItem();
+        productPage.addItemToCart();
     }
 
     @Test(priority = 7)
@@ -121,5 +117,3 @@ public class BestBuyAutomationTest {
         }
     }
 }
-
-
